@@ -1,0 +1,75 @@
+import json
+from datetime import datetime
+
+# Initialize JSON files for employees, tasks, attendance, and payroll
+def load_data(file):
+    try:
+        with open(file, 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
+
+def save_data(file, data):
+    with open(file, 'w') as f:
+        json.dump(data, f, indent=4)
+
+# Employee Management
+def add_employee(emp_id, name, age, dept, salary):
+    employees = load_data('employees.json')
+    employees[emp_id] = {'name': name, 'age': age, 'dept': dept, 'salary': salary}
+    save_data('employees.json', employees)
+    print(f"Employee {name} added successfully!")
+
+# Task Management
+def assign_task(task_id, emp_id, task, deadline):
+    tasks = load_data('tasks.json')
+    tasks[task_id] = {'emp_id': emp_id, 'task': task, 'status': 'Pending', 'deadline': deadline}
+    save_data('tasks.json', tasks)
+    print(f"Task '{task}' assigned to Employee ID {emp_id}")
+
+def update_task(task_id, status):
+    tasks = load_data('tasks.json')
+    if task_id in tasks:
+        tasks[task_id]['status'] = status
+        save_data('tasks.json', tasks)
+        print(f"Task {task_id} status updated to {status}")
+
+# Attendance Management
+def mark_attendance(emp_id):
+    attendance = load_data('attendance.json')
+    today = datetime.now().strftime('%Y-%m-%d')
+    check_in = datetime.now().strftime('%H:%M:%S')
+    attendance[emp_id] = {'date': today, 'check_in': check_in, 'check_out': None}
+    save_data('attendance.json', attendance)
+    print(f"Employee {emp_id} checked in at {check_in}")
+
+def check_out_employee(emp_id):
+    attendance = load_data('attendance.json')
+    if emp_id in attendance and attendance[emp_id]['check_out'] is None:
+        check_out = datetime.now().strftime('%H:%M:%S')
+        attendance[emp_id]['check_out'] = check_out
+        save_data('attendance.json', attendance)
+        print(f"Employee {emp_id} checked out at {check_out}")
+    else:
+        print(f"Check-out for Employee {emp_id} already marked or not checked in yet!")
+
+# Payroll Calculation
+def calculate_salary(emp_id, hours_worked):
+    employees = load_data('employees.json')
+    payroll = load_data('payroll.json')
+    if emp_id in employees:
+        base_salary = employees[emp_id]['salary']
+        total_salary = (base_salary / 160) * hours_worked  # Assuming 160 hours per month
+        payroll[emp_id] = {'hours_worked': hours_worked, 'total_salary': total_salary}
+        save_data('payroll.json', payroll)
+        print(f"Employee {emp_id} total salary: {total_salary}")
+    else:
+        print(f"Employee {emp_id} not found!")
+
+# Sample Operations
+add_employee('E001', 'Alice', 30, 'HR', 50000)
+assign_task('T001', 'E001', 'Prepare Payroll', '2024-10-20')
+mark_attendance('E001')
+calculate_salary('E001', 40)
+update_task('T001', 'Completed')
+check_out_employee('E001')
